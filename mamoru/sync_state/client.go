@@ -50,6 +50,7 @@ type SyncStatusResponse struct {
 	CurrentL1Finalized BlockStatus   `json:"current_l1_finalized"`
 	FinalizedL2        L2BlockStatus `json:"finalized_l2"`
 	EngineSyncTarget   L2BlockStatus `json:"engine_sync_target"`
+	QueuedUnsafeL2     L2BlockStatus `json:"queued_unsafe_l2"`
 	// Add other fields as needed...
 }
 
@@ -59,6 +60,7 @@ func (sync *SyncStatusResponse) GetCurrentBlockNumber() uint64 {
 
 func (sync *SyncStatusResponse) GetHighestBlockNumber() uint64 {
 	return sync.CurrentL1.Number
+	//return sync.QueuedUnsafeL2.Number todo: check this
 }
 
 // JSONRPCResponse represents a JSON-RPC response payload
