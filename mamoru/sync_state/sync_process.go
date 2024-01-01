@@ -1,6 +1,9 @@
 package sync_state
 
-import "github.com/ethereum/go-ethereum"
+import (
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/log"
+)
 
 type SyncProcess struct {
 	client *Client
@@ -21,8 +24,11 @@ func (s SyncProcess) Stop() {
 }
 
 func (s SyncProcess) Progress() ethereum.SyncProgress {
+	current := s.client.syncData.GetCurrentBlockNumber()
+	highest := s.client.syncData.GetHighestBlockNumber()
+	log.Info("Mamoru SyncProcess", "current", current, "highest", highest)
 	return ethereum.SyncProgress{
-		CurrentBlock: s.client.syncData.GetCurrentBlockNumber(),
-		HighestBlock: s.client.syncData.GetHighestBlockNumber(),
+		CurrentBlock: current,
+		HighestBlock: highest,
 	}
 }
