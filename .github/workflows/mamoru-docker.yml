@@ -6,7 +6,7 @@ on:
       - develop
 
 env:
-  REPOSITORY: mamorufoundation/go-geth
+  REPOSITORY: mamorufoundation/op-geth
 
 jobs:
   build:
