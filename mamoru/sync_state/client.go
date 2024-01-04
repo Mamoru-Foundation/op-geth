@@ -59,8 +59,7 @@ func (sync *SyncStatusResponse) GetCurrentBlockNumber() uint64 {
 }
 
 func (sync *SyncStatusResponse) GetHighestBlockNumber() uint64 {
-	return sync.CurrentL1.Number
-	//return sync.QueuedUnsafeL2.Number todo: check this
+	return sync.QueuedUnsafeL2.Number
 }
 
 // JSONRPCResponse represents a JSON-RPC response payload
