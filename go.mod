@@ -148,3 +148,5 @@ require (
 )
 
 //replace github.com/ethereum-optimism/superchain-registry/superchain => ../superchain-registry/superchain
+
+require github.com/Mamoru-Foundation/mamoru-sniffer-go v0.11.3
