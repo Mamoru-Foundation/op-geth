@@ -22,7 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -59,6 +61,11 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+
+	"github.com/ethereum/go-ethereum/mamoru"
+	"github.com/ethereum/go-ethereum/mamoru/mempool"
+	statistics "github.com/ethereum/go-ethereum/mamoru/stats"
+	"github.com/ethereum/go-ethereum/mamoru/sync_state"
 )
 
 // Config contains the configuration options of the ETH protocol.
@@ -264,6 +271,13 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	////////////////////////////////////////////////////////
+	// Attach txpool sniffer
+	mempool.NewSniffer(context.Background(), eth.txPool, eth.blockchain, eth.blockchain.Config(),
+		mamoru.NewFeed(eth.blockchain.Config(), statistics.NewStatsTxpool()))
+	////////////////////////////////////////////////////////
+
 	// Permit the downloader to use the trie cache allowance during fast sync
 	cacheLimit := cacheConfig.TrieCleanLimit + cacheConfig.TrieDirtyLimit + cacheConfig.SnapshotLimit
 	if eth.handler, err = newHandler(&handlerConfig{
@@ -280,6 +294,26 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	}); err != nil {
 		return nil, err
 	}
+
+	////////////////////////////////////////////////////////
+	// Attach sync processor to sniffer
+	val, ok := os.LookupEnv("MAMORU_OP_NODE_URL")
+	if ok {
+		polishTimeEnv := os.Getenv("MAMORU_OP_NODE_POLISH_TIME_SEC")
+		var polishTime uint
+		if polishTimeEnv != "" {
+			parseUint, err := strconv.ParseUint(polishTimeEnv, 10, 32)
+			if err != nil {
+				log.Error("Mamoru OP NODE POLISH TIME parse error", "err", err)
+				parseUint = 2
+			}
+			polishTime = uint(parseUint)
+		}
+		syncProccess := sync_state.NewSyncProcess(val, polishTime)
+		syncProccess.Start()
+		eth.blockchain.Sniffer.SetDownloader(syncProccess)
+	}
+	////////////////////////////////////////////////////////
 
 	eth.miner = miner.New(eth, &config.Miner, eth.blockchain.Config(), eth.EventMux(), eth.engine, eth.isLocalBlock)
 	eth.miner.SetExtra(makeExtraData(config.Miner.ExtraData))
